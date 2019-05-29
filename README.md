@@ -1,2 +1,2 @@
-# Project_bot
-Project bot on Python
+# Study_assistant
+Study_assistant on Python
