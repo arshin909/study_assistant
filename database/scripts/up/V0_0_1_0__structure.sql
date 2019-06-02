@@ -259,3 +259,23 @@ CREATE UNIQUE INDEX "semesters_id_uindex" ON "public"."semesters" USING btree (
 CREATE UNIQUE INDEX "students_id_uindex" ON "public"."students" USING btree (
   "id" "pg_catalog"."int4_ops" ASC NULLS LAST
 );
+
+ALTER TABLE students ADD COLUMN telegram_id varchar(15) NOT NULL;
+ALTER TABLE students ADD CONSTRAINT telegram_id_unique UNIQUE(telegram_id);
+CREATE UNIQUE INDEX telegram_id_index ON students(telegram_id);
+
+CREATE SEQUENCE "public"."teachers_id_seq"
+
+CREATE TABLE "public"."teachers" (
+  "id" int4 NOT NULL DEFAULT nextval('teachers_id_seq'::regclass),
+  "first_name" text COLLATE "pg_catalog"."default" NOT NULL,
+  "last_name" text COLLATE "pg_catalog"."default" NOT NULL,
+  "telegram_id" text COLLATE "pg_catalog"."default" NOT NULL,
+  CONSTRAINT "teachers_pkey" PRIMARY KEY ("id")
+)
+
+ALTER TABLE teachers ADD CONSTRAINT teachers_telegram_id_unique UNIQUE(telegram_id);
+ALTER TABLE semesters DROP COLUMN duration
+ALTER TABLE courses ADD COLUmn duration integer
+ALTER TABLE courses ADD COLUmn author integer
+ALTER TABLE "public"."courses" ADD CONSTRAINT "courses_author_id_fk" FOREIGN KEY ("author") REFERENCES "public"."teachers" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
