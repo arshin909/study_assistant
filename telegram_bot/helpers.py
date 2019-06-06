@@ -1,27 +1,57 @@
+from re import findall
 from datetime import date
 from collections import deque
 from telegram_bot.config import MAX_LEN_DEQUE
 
+CACHE = deque(maxlen=500)
+REGISTRATION = {}
 
-EXCEPT = {}
+
+def cache(key, value=None):
+    is_new = [i[1] for i in CACHE if i[0] == key] or [None]
+
+    if not value:
+        return is_new[0]
+
+    elif not is_new:
+        CACHE.append((key, value))
 
 
-def deque_work(elem, _type=None, _deque=EXCEPT):
+def deque_work(elem, command, _type=None):
     key = str(date.today())
 
-    if key not in _deque:
-        _deque[key] = deque(maxlen=MAX_LEN_DEQUE)
+    if key not in REGISTRATION:
+        REGISTRATION[key] = deque(maxlen=MAX_LEN_DEQUE)
+        if len(REGISTRATION.keys()) != 1:
+            REGISTRATION[key] = {key: REGISTRATION[key]}
 
-    val = (elem, _type)
-
-    if not _type:
-        result = ([i for i in EXCEPT[key] if i[0] == elem] + [None])[0]
-    else:
-        result = elem in _deque[key]
+    result = None
+    if command == 'r':
+        result = ([(i, v) for i, v in enumerate(REGISTRATION[key]) if v[0] == elem] + [None, ])[0]
+        if result:
+            REGISTRATION[key][result[0]] = (None, None)
+            result = result[1]
+    elif command == 'w':
+        result = elem in REGISTRATION[key]
         if not result:
-            _deque[key].append(val)
-
-    if len(_deque.keys()) != 1:
-        _deque[key] = {key: _deque[key]}
+            REGISTRATION[key].append((elem, _type))
 
     return result
+
+
+def format_data(formaring, *args):
+
+    if not args or any([len(i) != len(args[0]) for i in args]) or not formaring:
+        return ''
+
+    result = []
+    for row in args:
+        if findall(r'{[\d]+}', formaring):
+            string = formaring.format(*row)
+        else:
+            string = formaring.format(**row)
+
+        result.append(string)
+
+    return '\n'.join(result)
+

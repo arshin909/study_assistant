@@ -279,3 +279,4 @@ ALTER TABLE semesters DROP COLUMN duration
 ALTER TABLE courses ADD COLUmn duration integer
 ALTER TABLE courses ADD COLUmn author integer
 ALTER TABLE "public"."courses" ADD CONSTRAINT "courses_author_id_fk" FOREIGN KEY ("author") REFERENCES "public"."teachers" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE teachers add column patronymic text;
