@@ -1,6 +1,8 @@
-coding# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
+
 from telebot import TeleBot, apihelper
 from telebot.types import Message, ReplyKeyboardMarkup, KeyboardButton
+
 from telegram_bot.config import TOKEN, PROXY, BOT_INFORMATION
 from telegram_bot.request_db import Student, Teacher
 from telegram_bot.helpers import format_data
