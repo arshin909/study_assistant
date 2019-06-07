@@ -6,17 +6,17 @@ INSERT INTO "public"."groups"("id", "name") VALUES (2, '[test]Group2');
 
 INSERT INTO "public"."students"("id", "group_id", "first_name", "last_name", "patronymic", "gradebook_identy") VALUES (1, 1, 'Александр', 'Иванов', 'Александрович', 'г1-1');
 
-INSERT INTO "public"."students"("id", "group_id", "first_name", "last_name", "patronymic", "gradebook_identy") VALUES (2, 1, 'Дмитрий', 'Смирнов', 'Александрович', 'г1-2');
+INSERT INTO "public"."students"("id", "group_id", "first_name", "last_name", "patronymic", "gradebook_identy") VALUES (2, 1, 'Дмитрий', 'Смирнов', 'Иванович', 'г1-2');
 
 INSERT INTO "public"."students"("id", "group_id", "first_name", "last_name", "patronymic", "gradebook_identy") VALUES (3, 2, 'Максим', 'Кузнецов', 'Александрович', 'г2-1');
 
-INSERT INTO "public"."students"("id", "group_id", "first_name", "last_name", "patronymic", "gradebook_identy") VALUES (4, 2, 'Сергей', 'Попов', 'Александрович', 'г2-2');
+INSERT INTO "public"."students"("id", "group_id", "first_name", "last_name", "patronymic", "gradebook_identy") VALUES (4, 2, 'Сергей', 'Попов', 'Кикторович', 'г2-2');
 
 INSERT INTO "public"."students"("id", "group_id", "first_name", "last_name", "patronymic", "gradebook_identy") VALUES (5, 2, 'Ыксан', 'Гежулба', NULL, 'г2-3');
 
-INSERT INTO "public"."courses"("id", "name", "semester_id") VALUES (1, 'Теоретическа теория', 1);
+INSERT INTO "public"."courses"("id", "name", "semester_id") VALUES (1, 'Теория', 1);
 
-INSERT INTO "public"."courses"("id", "name", "semester_id") VALUES (2, 'Практическая практика', 1);
+INSERT INTO "public"."courses"("id", "name", "semester_id") VALUES (2, 'Практика', 1);
 
 INSERT INTO "public"."group-cource_rels"("group_id", "cource_id") VALUES (1, 1);
 
