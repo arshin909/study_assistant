@@ -25,6 +25,18 @@ def authorization(message):
 def registration(message):
     bot.send_message(message.chat.id, 'Укажите для регистрации адрес электронной почты')
 
+# регистрация
+
+
+@bot.message_handler(command=['settings'])
+def registration(message):
+    bot.send_message(message.chat.id, 'Укажите для регистрации адрес электронной почты')
+
+
+
+@bot.message_handler(command=['help'])
+def registration(message):
+    bot.send_message(message.chat.id, 'Укажите для регистрации адрес электронной почты')
 
 
 

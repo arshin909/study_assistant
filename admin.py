@@ -1,11 +1,5 @@
 # coding: utf-8
 
-import telebot
-
-bot = telebot.TeleBot(config.token)
-
-#нужна кнопка возврата назад
-
 @bot.message_handler(commands=['Преподаватель'])
 def admin(message):
     msg = bot.send_message(message.chat.id, 'Введите пароль:')
