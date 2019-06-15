@@ -1,0 +1,1 @@
+INSERT INTO "public"."tg_file_storage"("file_id", "date_time", "media_resource_id") VALUES ('AwADBAADYwADO1wlBuF1ogMa7HnMAg', '2019-06-09 08:50:43.173022', 1);
