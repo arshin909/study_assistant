@@ -23,8 +23,6 @@ con = psycopg2.connect(
 # логин equisk_study_assistant
 # пароль ARGJD4VKmYgj3eZ
 
-
-
 cur = con.cursor()
 
 @bot.message_handler(command=['/start'])
