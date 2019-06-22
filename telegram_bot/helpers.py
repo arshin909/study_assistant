@@ -9,11 +9,10 @@ REGISTRATION = {}
 
 def cache(key, value=None):
     is_new = [i[1] for i in CACHE if i[0] == key] or [None]
-
     if not value:
         return is_new[0]
 
-    elif not is_new:
+    if not is_new[0] and value:
         CACHE.append((key, value))
 
 
@@ -46,6 +45,12 @@ def format_data(formaring, *args):
 
     result = []
     for row in args:
+        list_data = [i for i, j in enumerate(row) if isinstance(j, list)]
+        if list_data:
+            row = list(row)
+        for l in list_data:
+            row[l] = f'[{", ".join(str(i) for i in row[l] if i)}]'
+
         if findall(r'{[\d]+}', formaring):
             string = formaring.format(*row)
         else:
@@ -54,4 +59,12 @@ def format_data(formaring, *args):
         result.append(string)
 
     return '\n'.join(result)
+
+
+def format_group(group):
+    return str(group or '').lower().replace(' ', '').replace('-', '').replace('_', '')
+
+
+class MyException(Exception):
+    pass
 

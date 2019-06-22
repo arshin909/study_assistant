@@ -1,4 +1,4 @@
-from telegram_bot.helpers import cache
+from telegram_bot.helpers import cache, MyException
 from telegram_bot.config import db_connect, COURSE_LIFE
 
 
@@ -32,16 +32,38 @@ class Base:
             cursor.execute(self.sql)
             db_connect.commit()
 
+    def commit_return(self):
+        with db_connect.cursor() as cursor:
+            cursor.execute(self.sql)
+            result = cursor.fetchone()
+            db_connect.commit()
+        return result
+
+    def commit_returns(self):
+        with db_connect.cursor() as cursor:
+            cursor.execute(self.sql)
+            result = cursor.fetchall()
+            db_connect.commit()
+        return result
+
 
 class People(Base):
 
     table = None
     sql = None
+    _type = None
 
     def __init__(self, _id=None):
-        if _id is not None:
-            self.data = cache(_id) or self.get_people(_id).get()
-            cache(_id, self.data)
+        if _id is None:
+            return
+
+        data = cache(_id)
+        if data and data[0] == self._type:
+            self.data = data[1]
+        else:
+            self.data = self.get_people(_id).get()
+
+        cache(_id, (self._type, self.data))
 
     def get_people(self, _id):
         """ Записан студетн или нет """
@@ -57,16 +79,12 @@ class People(Base):
         """
         return self
 
-    def get_course(self, cource):
-        self.sql = f"""
-            SELECT * FROM courses WHERE id = {cource}
-        """
-        return self
-
-    def get_group(self, group):
-        self.sql = f"""
-            SELECT * FROM groups WHERE id = {group}
-        """
+    def get_group(self, _id=None, name=None):
+        if _id or name:
+            self.sql = f"""
+                SELECT * FROM groups WHERE 
+                {'id = ' + str(_id) if _id else f"name = '{name}'" if name else "False"}
+            """
         return self
 
     def all_course(self):
@@ -116,11 +134,16 @@ class Student(People):
         self.sql = f"SELECT id FROM groups WHERE name = '{name}'"
         return self.get()
 
-    def create(self, student: dict):
-        student['group_id'] = self.create_group(student['group_id'])
+    def create(self, student: dict, returning=False):
+        student['group_id'] = self.create_group(student['group_id'])[0]
+        student['return_text'] = ''
+        if returning:
+            student['return_text'] = "RETURNING id"
+
         self.sql = """
             INSERT INTO students(group_id, first_name, last_name, patronymic, gradebook_identy, telegram_id)  
             VALUES ({group_id}, '{first_name}', '{last_name}', '{patronymic}', '{gradebook}', '{id}')
+            {return_text}
         """.format(**student)
         return self
 
@@ -142,7 +165,7 @@ class Student(People):
         return self
 
     def get_point_visible(self, course, point=False):
-        if point:
+        if point:point
             table = 'student_performance'
             field = 'points'
         else:
@@ -174,4 +197,123 @@ class Teacher(People):
             INSERT INTO teachers(first_name, last_name, patronymic, telegram_id)  
             VALUES ('{first_name}', '{last_name}', '{patronymic}', '{id}')
         """.format(**student)
+        return self
+
+    def my_course(self):
+        self.sql = f"""
+            SELECT 
+                   c.id,
+                   c.name,
+                   c.duration,
+                   s.start_date,
+                   ARRAY_AGG(g.name) AS groups
+            FROM courses AS c
+                 LEFT JOIN semesters AS s ON s.id = c.semester_id
+                 LEFT JOIN "group-cource_rels" AS gr ON gr.cource_id = c.id
+                 LEFT JOIN groups AS g ON g.id = gr.group_id
+            WHERE c.author = {self.data[0]}
+            GROUP BY c.id, c.name, c.duration, c.author, s.start_date
+            ORDER BY s.start_date
+        """
+        return self
+
+    def get_semesters(self, _id=None):
+        self.sql = f"""
+            SELECT * FROM semesters WHERE TRUE {f'AND {_id} = id' if _id else ''}
+        """
+        return self
+
+    def create_semesters(self, date_start):
+        self.sql = f"""
+            INSERT INTO semesters(start_date) VALUES ('{date_start}'::DATE)
+            ON CONFLICT DO NOTHING
+            RETURNING id
+        """
+        return self
+
+    def create_course(self, course):
+        semester_id = course['semester']
+        if course['new']:
+            try:
+                semester_id = self.create_semesters(course['semester']).commit_return()
+                semester_id = semester_id[0]
+            except Exception:
+                raise MyException('Не удалоь создать семестр.')
+        self.sql = f"""
+            INSERT INTO courses(name, semester_id, duration, author) 
+            VALUES ('{course['name']}', {semester_id}, {course['duration']}, {self.data[0]})
+            ON CONFLICT DO NOTHING
+        """
+        return self
+
+    def check_course(self, course_id):
+        self.sql = f"""
+            SELECT * FROM courses WHERE id = {course_id} AND author = {self.data[0]}
+        """
+        return self
+
+    def del_course(self, course_id):
+        if not self.check_course(course_id).get():
+            raise MyException('Вы не являетесь автором курса')
+
+        self.sql = f"""
+            SELECT id FROM lessons WHERE cource_id = {course_id}
+        """
+        lessons = self.commit_returns()
+
+        if lessons:
+            self.sql = f"""
+                DELETE FROM "lesson-media_resources_rels" WHERE lesson_id = ANY(ARRAY{lessons})
+                RETURNING media_resource_id
+            """
+            media = self.commit_returns()
+
+            self.sql = f"""
+                WITH visible AS (
+                    DELETE FROM student_visits WHERE lesson_id = ANY(ARRAY{lessons})
+                ),
+                point AS (
+                    DELETE FROM student_performance WHERE lesson_id = ANY(ARRAY{lessons})
+                ),
+                lesson AS (
+                    DELETE FROM lessons WHERE id = ANY(ARRAY{lessons})
+                ) 
+                DELETE FROM media_resources WHERE id ANY(ARRAY{media or []}::int)
+            """
+            self.commit()
+
+        self.sql = f"""
+            WITH grp AS (
+                DELETE FROM "group-cource_rels" WHERE cource_id = {course_id}
+            )
+            DELETE FROM courses WHERE id = {course_id}
+            RETURNING semester_id
+        """
+
+        semester = self.commit_return()
+        self.sql = f"""
+            SELECT * FROM courses WHERE semester_id = {semester[0]} LIMIT 1
+        """
+
+        if not self.get():
+            self.sql = f"""
+                DELETE FROM semesters WHERE id = {semester[0]}
+            """
+
+    def sing_up_course(self, course_id, group):
+        if not self.check_course(course_id).get():
+            raise MyException('Вы не являетесь автором курса')
+
+        self.sql = f"""
+            INSERT INTO "group-cource_rels"(group_id, cource_id) 
+            VALUES ({Student().create_group(group)[0]}, {course_id})
+        """
+        return self
+
+    def create_lesson(self, course, group, _date):
+        self.sql = f"""
+            INSERT INTO lessons(group_id, cource_id, date_time) 
+            VALUES ({group}, {course}, '{_date}'::TIMESTAMP)
+            RETURNING id
+        """
         return self

@@ -2,6 +2,7 @@ from psycopg2 import connect
 from collections import namedtuple
 from json import loads
 
+
 with open('config.json', 'r') as f:
     config = loads(f.read())
 
@@ -33,8 +34,34 @@ NEW_TEACHER = """
 
 """
 
-BOTTOMS_STUD_TYPE = namedtuple('bottoms', 'list my settings point visits')
-Bottoms_stud = BOTTOMS_STUD_TYPE('Список курсов', 'Мои курсы', 'Настройки', 'Оценки', 'Посещаемость')
+NEW_COURSE = """
+Введите информецию о курсе.
+Название, продолжительность, семестр
+Мат анализ, 120, 1
+Список семестров:
+{semesters}
 
-BOTTOMS_TEATCHER_TYPE = namedtuple('bottoms', 'list my settings point visits')
-Bottoms_teacher = BOTTOMS_TEATCHER_TYPE('Список курсов', 'Мои курсы', 'Настройки', 'Оценки', 'Посещаемость')
+Если нужного семестра нет, тогда создайте новый.
+Создание курса в новом семетсре:
+Название, продолжительность, старт семестра
+Например:
+Мат анализ, 120, 2019-01-30
+"""
+
+
+BOTTOMS_STUD_TYPE = namedtuple('bottoms_student', 'list my settings point visits homework')
+Bottoms_stud = BOTTOMS_STUD_TYPE('Список курсов', 'Мои курсы', 'Настройки', 'Оценки', 'Посещаемость', 'Домашка')
+
+BOTTOMS_TEACHER_TYPE = namedtuple('bottoms_teacher', 'course lessons settings')
+Bottoms_teacher = BOTTOMS_TEACHER_TYPE('Курс', 'Занятия', 'Настройка')
+
+BOTTOMS_TEACHER_COURSE = namedtuple('bottoms_teacher_course', 'list my add_course del_course group_sing_up back')
+Bottoms_course = BOTTOMS_TEACHER_COURSE('Список курсов', 'Мои курсы', 'Создать', "Удалить", "Записать группу на курс",
+                                        "Назад")
+
+BOTTOMS_TEACHER_LESSON = namedtuple('bottoms_teacher_lesson', 'add_state  add_homework download start back')
+Bottoms_lesson = BOTTOMS_TEACHER_LESSON("Загрузить статистику", "Загрузить задание", "Скачать статистику",
+                                        "Начать занятие", "Назад")
+
+SECRET_COMMAND = 'del me now'
+example_path = './Example/example.xlsx'
