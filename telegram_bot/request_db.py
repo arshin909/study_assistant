@@ -165,7 +165,7 @@ class Student(People):
         return self
 
     def get_point_visible(self, course, point=False):
-        if point:point
+        if point:
             table = 'student_performance'
             field = 'points'
         else:
